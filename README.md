@@ -1,7 +1,7 @@
-beepose_refactor
+beepose
 ==============================
 
-Temporary repo for refactor code. After rewriting the code of the pose estimation I will create a new one.
+Welcome to beepose the repo to perform multiple animal pose estimation. 
 
 
 How to start?
