@@ -1,0 +1,9 @@
+#!/bin/bash
+#SBATCH --partition=GPU-AI
+#SBATCH --nodes=1
+#SBATCH--gres=gpu:volta16:2
+#SBATCH --time=13:30:00
+
+source activate beepose
+cd /pylon5/ir5fq8p/piperod/beepose/src/inference/
+python /pylon5/ir5fq8p/piperod/beepose/src/inference/process_folder_full_video.py --videos_path /pylon5/ir5fq8p/piperod/new_videos/ --GPU 0,1 --GPU_mem 16 --tracking both  --model_day /pylon5/ir5fq8p/piperod/beepose/models/pose/Complete_tag_2_16_8.best.h5 --np1 16 --np2 8 --numparts 8 --part 1 --process_pollen False
