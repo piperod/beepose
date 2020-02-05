@@ -187,7 +187,7 @@ def main():
     parser.add_argument('--imgs',type=str, default = '../../data/raw/bee/dataset_raw/train',help='Path to images folder')
     parser.add_argument('--val_imgs',type=str,default='../../data/raw/bee/dataset_raw/validation',help= 'path to val images folder')
     parser.add_argument('--batch_size', type=int, default =10, help= 'batch_size' )
-    parse.add_argument('--max_iter', type=int,default=20000, help='Number of epochs to run ')
+    parser.add_argument('--max_iter', type=int,default=20000, help='Number of epochs to run ')
     
     
     args = parser.parse_args()
