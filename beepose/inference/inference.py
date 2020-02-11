@@ -23,7 +23,7 @@ def calculate_peaks(numparts,heatmap_avg):
     
     #Right now there is a score for every part since some parts are likely to need lower thresholds. 
     # TODO: Run grid search to find the ideal values. 
-    score=[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+    score=[0.4,0.4,0.4,0.4,0.4,0.5,0.5,0.5,0.5]
     all_peaks = []
     peak_counter = 0
     if len(score)<numparts:
@@ -275,8 +275,10 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
    
     # last number in each row is the total parts number of that animal
     # the second last number in each row is the score of the overall configuration
-    subset = -1 * np.ones((0, 20))
+    
     candidate = np.array([item for sublist in all_peaks for item in sublist])
+    print(len(candidate))
+    subset = -1 * np.ones((0, len(candidate)+1))
     tic_pafscore=time.time()
     for k in range(len(mapIdx)):
         if k not in special_k:
@@ -291,7 +293,7 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
                     if subset[j][indexA] == partAs[i] or subset[j][indexB] == partBs[i]:
                         subset_idx[found] = j
                         found += 1
-
+                
                 if found == 1:
                     j = subset_idx[0]
                     if (subset[j][indexB] != partBs[i]):
@@ -309,11 +311,12 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
                     else:  # as like found == 1
                         subset[j1][indexB] = partBs[i]
                         subset[j1][-1] += 1
+                        
                         subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
 
                 # if find no partA in the subset, create a new subset
                 elif not found and k < numparts:
-                    row = -1 * np.ones(20)
+                    row = -1 * np.ones(len(candidate)+1)
                     row[indexA] = partAs[i]
                     row[indexB] = partBs[i]
                     row[-1] = 2
@@ -503,8 +506,9 @@ def inference_by_batch (input_imgs,ori,hmps,pafs,init,params,model_params,show=F
                 connection_all.append([])
         # last number in each row is the total parts number of that animal
         # the second last number in each row is the score of the overall configuration
-        subset = -1 * np.ones((0, 20))
+        
         candidate = np.array([item for sublist in all_peaks for item in sublist])
+        subset = -1 * np.ones((0, len(candidate)))
         for k in range(len(mapIdx)):
             if k not in special_k:
                 partAs = connection_all[k][:, 0]

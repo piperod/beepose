@@ -30,6 +30,7 @@ def step_decay(epoch):
     return lrate
 
 if __name__ == '__main__':
+    
     batch_size = 60
     base_lr = 4e-5 # 2e-5
     momentum = 0.9
@@ -129,7 +130,7 @@ if __name__ == '__main__':
         train_samples = 100
 
     else:
-        
+        pass 
         # Add our augmenter for check stuff
 
     # setup lr multipliers for conv layers

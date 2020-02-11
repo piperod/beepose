@@ -30,6 +30,7 @@ def step_decay(epoch):
     return lrate
 
 if __name__ == '__main__':
+    
     batch_size = 60
     base_lr = 4e-5 # 2e-5
     momentum = 0.9
@@ -129,17 +130,8 @@ if __name__ == '__main__':
         train_samples = 100
 
     else:
-
-        train_di = DataIterator("../dataset/train_dataset.h5", data_shape=(3, 368, 368),
-                      mask_shape=(1, 46, 46),
-                      label_shape=(57, 46, 46),
-                      vec_num=38, heat_num=19, batch_size=batch_size, shuffle=True)
-        train_samples=train_di.N
-        val_di = DataIterator("../dataset/val_dataset.h5", data_shape=(3, 368, 368),
-                      mask_shape=(1, 46, 46),
-                      label_shape=(57, 46, 46),
-                      vec_num=38, heat_num=19, batch_size=batch_size, shuffle=True)
-        val_samples=val_di.N
+        pass 
+        # Add our augmenter for check stuff
 
     # setup lr multipliers for conv layers
     lr_mult=dict()

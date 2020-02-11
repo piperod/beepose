@@ -3,8 +3,8 @@ from setuptools import find_packages, setup
 setup(
     name='beepose',
     packages=find_packages(),
-    version='0.1.0',
-    description='Temporary repo for refactor code. After rewriting the code of the pose estimation I will create a new one. ',
+    version='0.1.1',
+    description='After rewriting the code of the pose estimation I will create a new one. ',
     author='Ivan Felipe rodriguez',
     license='BSD-3',
     entry_points={
