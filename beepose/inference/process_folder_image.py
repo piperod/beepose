@@ -68,7 +68,7 @@ if __name__ == '__main__':
                4:0.4,5:0.4,
                5:0.09,6:0.09,
                7:0.01}, 
-              'thre2': 0.2, 'thre3': 0.5, 
+              'thre2': 0.05, 'thre3': 0.5, 
               'min_num': 4, 'mid_num': 10, 
               'crop_ratio': 2.5, 'bbox_ratio': 0.25} 
 
