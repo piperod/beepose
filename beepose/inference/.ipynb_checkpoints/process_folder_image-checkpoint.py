@@ -68,7 +68,7 @@ if __name__ == '__main__':
                4:0.4,5:0.4,
                5:0.09,6:0.09,
                7:0.01}, 
-              'thre2': 0.2, 'thre3': 0.5, 
+              'thre2': 0.05, 'thre3': 0.5, 
               'min_num': 4, 'mid_num': 10, 
               'crop_ratio': 2.5, 'bbox_ratio': 0.25} 
 
@@ -83,8 +83,8 @@ if __name__ == '__main__':
         img_resized=cv2.resize(img,(img.shape[1]//resize_factor,img.shape[0]//resize_factor))
         
         canvas,mappings,parts = inference(img_resized,model, params, model_params,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310,numparts=5,
-                                                mapIdx=[[0,1],[2,3],[4,5],[6,7]],
-                                                limbSeq=[[1,3],[3,2],[2,4],[2,5]])#resize=(256,144))#
+                                                mapIdx=[[0,1],[2,3],[4,5],[6,7],[8,9]],
+                                                limbSeq=[[1,3],[3,2],[2,4],[2,5],[1,2]])#resize=(256,144))#
         print(parts)
         
         frame_detections[input_image]={}

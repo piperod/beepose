@@ -23,7 +23,7 @@ def calculate_peaks(numparts,heatmap_avg):
     
     #Right now there is a score for every part since some parts are likely to need lower thresholds. 
     # TODO: Run grid search to find the ideal values. 
-    score=[0.4,0.4,0.4,0.4,0.4,0.5,0.5,0.5,0.5]
+    score=[0.2,0.2,0.2,0.2,0.2,0.5,0.5,0.5,0.5]
     all_peaks = []
     peak_counter = 0
     if len(score)<numparts:
@@ -55,7 +55,7 @@ def calculate_peaks(numparts,heatmap_avg):
         #peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
         #peaks_with_score_and_id = [peaks_with_score[i] + (i+peak_counter,) for i in list(range(len(peaks)))]
         #peaks_with_score_and_id = [ pws + (i+peak_counter,) for i,pws in enumerate(peaks_with_score) ]
-        peaks_with_score_and_id = [ x + (map_ori[x[1], x[0]], i+peak_counter,) for i,x in enumerate(peaks) if x[0]>0 and x[1]>0 ]
+        peaks_with_score_and_id = [ x + (map_ori[x[1], x[0]], i+peak_counter,) for i,x in enumerate(peaks)] #if x[0]>0 and x[1]>0 ]
         
         all_peaks.append(peaks_with_score_and_id)
         peak_counter += len(peaks)
