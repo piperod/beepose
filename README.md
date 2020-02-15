@@ -1,7 +1,12 @@
 beepose
 ==============================
 
-Welcome to beepose the repo to perform multiple animal pose estimation. 
+
+![](docs/beedemo.gif)
+
+
+Welcome to beepose the repo to perform multiple animal pose estimation and tracking. 
+
 
 
 How to start?
