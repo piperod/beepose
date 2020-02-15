@@ -380,7 +380,7 @@ def get_skeleton_from_json(filename):
     return numparts, skeleton
 
 
-def get_skeleton_mapIdx(skeleton):
+def get_skeleton_mapIdx(numparts):
     """
     Calculate the mapsIdx for each limb from the skeleton.
     Input:
@@ -388,7 +388,7 @@ def get_skeleton_mapIdx(skeleton):
     Output:
         list of ids for x and y for part
     """
-    connections_num = len(skeleton)
+    connections_num = numparts
     mapIdx = list()
     
     for i in range(connections_num):

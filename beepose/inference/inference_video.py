@@ -1,7 +1,7 @@
 import sys 
 sys.path.append('..')
 from keras.models import load_model
-from src.inference.inference import inference,inference_by_batch
+from beepose.inference.inference import inference,inference_by_batch
 import tensorflow as tf
 import argparse
 import cv2
@@ -189,15 +189,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--video', type=str, default ='/mnt/storage/Gurabo/videos/Gurabo/mp4/C02_170610090000.mp4', help='input video file')
     parser.add_argument('--output', type=str, default='C02_170610090000_test.json', help='csv file name')
-    parser.add_argument('--model', type=str, default='training/weights_logs/5p_2/complete_5p_2.best.h5', 
+    parser.add_argument('--model', type=str, default='../../models/pose/complete_5p_2.best.h5', 
                                 help='path to the complete model file model+weights')
+    parser.add_argument('--model_config',  default='../../models/pose/complete_5p_2_model_params.json', type=str, help="Model config json file. This file is created when a training session is started. It should be located in the folder containing the weights.")
     parser.add_argument('--GPU',type = int, default =0,choices = [0,1,2])
     #parser.add_argument('--stages', type=int, default= 6, help='number of stages')
     parser.add_argument('--start', type=int, default=0, help='starting frame')
     parser.add_argument('--end', type=int, default=72000, help='end frame')
     parser.add_argument('--gpu_fraction', type=float, default=0.3, help='fraction of the gpu to use')
-    parser.add_argument('--limb_conf',default=[[1,3],[3,2],[2,4],[2,5],[1,2]] )
-    parser.add_argument('--paf_conf',default=[[0,1],[2,3],[4,5],[6,7],[8,9]] )
+    #parser.add_argument('--limb_conf',default=[[1,3],[3,2],[2,4],[2,5],[1,2]] )
+    #parser.add_argument('--paf_conf',default=[[0,1],[2,3],[4,5],[6,7],[8,9]] )
    
     #________ARGS_________
     
@@ -209,15 +210,26 @@ if __name__ == '__main__':
     start_frame = args.start
     end_frame = args.end
     gpu_fraction = args.gpu_fraction
-    limbSeq = args.limb_conf
-    mapIdx = args.paf_conf
+    #limbSeq = args.limb_conf
+    #mapIdx = args.paf_conf
     video = cv2.VideoCapture(path)
     gpu = args.GPU
     
+    config_file = args.model_config
+    with open(config_file, 'r') as json_file:
+        config = json.load(json_file)
+    print(config)
     
-    np1=12
-    np2=6
+    limbSeq = config["skeleton"]
+    mapIdx = config["mapIdx"]
+    sufix = args.sufix
+    tracking = args.tracking
+    np1 = config["np1"]
+    np2 = config["np2"]
+    numparts= config["numparts"]
     
+    
+   
     print('model loaded....')
     # load config
     process_video_fragment(path,model_file,gpu,gpu_fraction,start_frame,end_frame,limbSeq,mapIdx,np1,np2,output)

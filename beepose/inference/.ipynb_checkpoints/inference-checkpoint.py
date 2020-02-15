@@ -108,7 +108,7 @@ def candidate_selection(mapIdx,limbSeq,paf_avg,distance_tolerance,resize,thre2,w
             connection_all.append([])
     return 
     
-def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,resize=1,
+def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,resize=1,
                 distance_tolerance=310,numparts=5,
                 mapIdx=[[0,1],[2,3],[4,5],[6,7],[8,9]],
                 limbSeq=[[1,3],[3,2],[2,4],[2,5],[1,2]],
@@ -144,6 +144,7 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
         params['thre1']
         params['thre2']
     """
+    mapIdx = [[2*i,2*i+1] for i in range(numparts)]
     
     profiling ={}
     tic_initialize=time.time()
@@ -205,6 +206,10 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
     
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x  for x in mapIdx[k]]]
+        
+        if len(limbSeq)<=k:
+            logger.warning('Warning: omitting connection due to parts that do not belong to skeleton')
+            continue
         candA = all_peaks[limbSeq[k][0] - 1]
         candB = all_peaks[limbSeq[k][1] - 1]
         nA = len(candA)
@@ -264,11 +269,14 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
     # the second last number in each row is the score of the overall configuration
     
     candidate = np.array([item for sublist in all_peaks for item in sublist])
-    print(len(candidate))
+    #print(len(candidate))
     subset = -1 * np.ones((0, len(candidate)+1))
     tic_pafscore=time.time()
     for k in range(len(mapIdx)):
         if k not in special_k:
+            if len(connection_all)<=k:
+                logger.warning('Warning: connection not found. There are parts that are  not associated with a connection ')
+                continue
             partAs = connection_all[k][:, 0]
             partBs = connection_all[k][:, 1]
             indexA, indexB = np.array(limbSeq[k]) - 1
@@ -330,7 +338,7 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
             temp_parts[i].append([int(a),int(b),c])
         parts[i]=temp_parts[i]
     mappings=[]
-    for i in range(numparts):#17
+    for i in range(len(limbSeq)):#17
         for n in range(len(subset)):
             kind=limbSeq[i]
             index = subset[n][np.array(kind) - 1]
@@ -362,7 +370,7 @@ def inference(input_image,model, params, model_params,show=True,np1=19,np2=38,re
 
         stickwidth = 10//(resize-1) #4
 
-        for i in range(numparts):#17
+        for i in range(len(limbSeq)):#17
             for n in range(len(subset)):
                 index = subset[n][np.array(limbSeq[i]) - 1]
                 if -1 in index:

@@ -17,7 +17,7 @@ import json
 
 
 
-def process_full_videos(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking='hungarian',np1=12,np2=6,process_pollen=True,numparts=5,part='2'):
+def process_full_videos(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking='hungarian',np1=12,np2=6,event_detection=True,process_pollen=True,numparts=5,part='2'):
     
     """
     This Function takes as input  a folder of videos to process. Then takes each of the videos and creates as many subprocesses as possible in order to allocate the maximum possible in the GPU and process the video faster. 
@@ -159,31 +159,31 @@ def process_full_videos(videos_path,model_day,model_nigth,model_pollen,output_fo
     print('==============================================================================')
     print('                         Event Detection                                      ')
     print('==============================================================================')
-        
-    if tracking == 'hungarian':
+    if event_detection: 
+        if tracking == 'hungarian':
          
-        prefix = 'id_nms_track_'
-        print('Event detection on file %s'%prefix)
-        e = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
-        e.start()
-        e.join()
-    elif tracking == 'kalman':
-        prefix = 'id_kalman_tracks.json' 
-        print('Event detection on file %s'%prefix)
-        e = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
-        e.start()
-        e.join()
-    elif tracking == 'both':
-        prefix = 'id_nms_track_'
-        print('Event detection on file %s'%prefix)
-        e1 = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
-        e1.start()
-        prefix = 'id_kalman_tracks.json' 
-        print('Event detection on file %s'%prefix)
-        e2 = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
-        e2.start()
-        e1.join()
-        e2.join()
+            prefix = 'id_nms_track_'
+            print('Event detection on file %s'%prefix)
+            e = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
+            e.start()
+            e.join()
+        elif tracking == 'kalman':
+            prefix = 'id_kalman_tracks.json' 
+            print('Event detection on file %s'%prefix)
+            e = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
+            e.start()
+            e.join()
+        elif tracking == 'both':
+            prefix = 'id_nms_track_'
+            print('Event detection on file %s'%prefix)
+            e1 = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
+            e1.start()
+            prefix = 'id_kalman_tracks.json' 
+            print('Event detection on file %s'%prefix)
+            e2 = mp.Process(target=do_event_detection_folder,args=(prefix,'',output_folder,72000))
+            e2.start()
+            e1.join()
+            e2.join()
             
     
     
@@ -455,8 +455,9 @@ def process_full_videos_by_batch(videos_path,model_day,model_nigth,model_pollen,
     
     #for f in filenames:
     #    shutil.move(f,recicle_folder)
+    
         
-            
+        
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--videos_path', type=str, help='input folder path where the videos are')
@@ -474,9 +475,10 @@ def main():
 #     parser.add_argument('--np1',type=int,default=12, help = 'number of channels for pafs')
 #     parser.add_argument('--np2',type=int,default=6, help= 'number of channels for heatmaps')
 #     parser.add_argument('--numparts',type=int,default=5, help='number of parts to process')
-    parser.add_argument('--model_config', required=True, type=str, help="Model config json file")
+    parser.add_argument('--model_config', default='../../models/pose/complete_5p_2_model_params.json', type=str, help="Model config json file")
     parser.add_argument('--part',type=int,default=2, help='Index id of Part to be tracked')
     parser.add_argument('--process_pollen', default=False, action="store_true", help='Whether to apply pollen detection separately. Default is True')
+    parser.add_argument('--event_detection', default=True, action="store_true", help='Whether to apply event detection. Default is True')
     parser.add_argument('--debug',type=bool,default=False,help='If debug is True logging will include profiling and other details')
     SIZEMODEL = 4 # Usually I used up to 4.5 GB per model to avoid memory problem when running.
     
@@ -488,10 +490,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
       
 
-    config_file = args.model_config
-    with open(config_file, 'r') as json_file:
-        config = json.load(json_file)
-    print(config)
+
     
     
     
@@ -512,22 +511,15 @@ def main():
     model_day = args.model_day
     model_nigth = args.model_nigth
     model_pollen = args.model_pollen
-    # CONFIGURATION FOR ONLY PARTS DETECTION
-#     if int(args.numparts) == 5:
-# #         limbSeq = [[1,3],[3,2],[2,4],[2,5],[1,2]]# args.limb_conf
-#         limbSeq = [[1,2], [2, 3], [3, 4], [4, 5]]
-#         #MapsIds x and y for each connection (limb, skeleton)
-# #         mapIdx = [[0,1],[2,3],[4,5],[6,7],[8,9]]#list(args.paf_conf)
-#         mapIdx = [[0,1],[2,3],[4,5],[6,7]]#list(args.paf_conf)
-        
-#     else:
-#         # CONFIGURATION FOR PARTS AND POLLEN AND TAGS
-#         mapIdx = [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13]]
-#         limbSeq = [[1,3],[3,2],[2,1],[1,4],[1,5],[6,2],[7,2],[2,8]]
+    
+    
+    config_file = args.model_config
+    with open(config_file, 'r') as json_file:
+        config = json.load(json_file)
+    print(config)
     
     limbSeq = config["skeleton"]
     mapIdx = config["mapIdx"]
-    
     sufix = args.sufix
     tracking = args.tracking
     np1 = config["np1"]
@@ -535,11 +527,11 @@ def main():
     numparts= config["numparts"]
     part = str(args.part)
     process_pollen = args.process_pollen
-
-
+    event_detection = args.event_detection
+    
     # Slower than I thought. It may be improved. But need to parellize
- #process_full_videos_by_batch(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking=tracking,np1=np1,np2=np2)
-    process_full_videos(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking=tracking,np1=np1,np2=np2,process_pollen=process_pollen,numparts=numparts)
+    #process_full_videos_by_batch(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking=tracking,np1=np1,np2=np2)
+    process_full_videos(videos_path,model_day,model_nigth,model_pollen,output_folder,sufix,limbSeq,mapIdx,number_models,GPU,GPU_mem,tracking=tracking,np1=np1,np2=np2,event_detection=event_detection,process_pollen=process_pollen,numparts=numparts)
     
 if __name__ == '__main__':
     main()

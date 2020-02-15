@@ -12,6 +12,7 @@ import glob,os
 import tensorflow as tf
 from beepose.utils.util import NumpyEncoder,save_json,merge_solutions_by_batch
 from beepose.inference.inference import inference
+import json 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 session = tf.Session(config=config)
@@ -24,11 +25,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--folder', type=str, default ='../../data/raw/bee/dataset_raw/validation.json', help='input images folder')
     parser.add_argument('--output', type=str, default='testing_images_result.json', help='csv file name')
-    parser.add_argument('--model', type=str, default='training/weights.best.3p.h5', help='path to the weights file')
-    parser.add_argument('--stages',type = int, default = 2, help='How many stages')
+    parser.add_argument('--model', type=str, default='../../models/pose/complete_5p_2.best.h5', 
+                                help='path to the complete model file model+weights')
+    parser.add_argument('--model_config',  default='../../models/pose/complete_5p_2_model_params.json', type=str, help="Model config json file. This file is created when a training session is started. It should be located in the folder containing the weights.")
+    #parser.add_argument('--stages',type = int, default = 2, help='How many stages')
     parser.add_argument('--output_folder',type=str,default='detections/validation2019/2p')
-    parser.add_argument('--np1',type=int,default=12)
-    parser.add_argument('--np2',type=int,default=6)
+    #parser.add_argument('--np1',type=int,default=12)
+    #parser.add_argument('--np2',type=int,default=6)
     parser.add_argument('--resize_factor',type=int,default=4)
     
     
@@ -42,9 +45,23 @@ if __name__ == '__main__':
     os.makedirs(output_folder,exist_ok=True)
     
     imlist = sorted([os.path.join(path,f) for f in os.listdir(path) if f.endswith('.jpg')])
-    np1=args.np1
-    np2 =args.np2
-    stages = args.stages
+    
+    
+    
+    config_file = args.model_config
+    with open(config_file, 'r') as json_file:
+        config = json.load(json_file)
+    print(config)
+    
+    limbSeq = config["skeleton"]
+    mapIdx = config["mapIdx"]
+    np1 = config["np1"]
+    np2 = config["np2"]
+    numparts= config["numparts"]
+    stages = config['stages']
+    
+    
+
     resize_factor = args.resize_factor 
     tic_total = time.time()
     print('start processing...')
@@ -82,9 +99,9 @@ if __name__ == '__main__':
         
         img_resized=cv2.resize(img,(img.shape[1]//resize_factor,img.shape[0]//resize_factor))
         
-        canvas,mappings,parts = inference(img_resized,model, params, model_params,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310,numparts=5,
-                                                mapIdx=[[0,1],[2,3],[4,5],[6,7],[8,9]],
-                                                limbSeq=[[1,3],[3,2],[2,4],[2,5],[1,2]])#resize=(256,144))#
+        canvas,mappings,parts = inference(img_resized,model, params, model_params,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310/3,numparts=numparts,
+                                                mapIdx=mapIdx,
+                                                limbSeq=limbSeq)#resize=(256,144))#
         print(parts)
         
         frame_detections[input_image]={}

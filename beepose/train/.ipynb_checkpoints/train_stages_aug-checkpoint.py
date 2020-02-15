@@ -203,7 +203,7 @@ def main():
     np2= numparts + 1#6#number of channels for parts
     np1= np2 * 2#12 #number of channels for pafs
 #     numparts = np2 
-    mapIdx = get_skeleton_mapIdx(skeleton)
+    mapIdx = get_skeleton_mapIdx(numparts)
     gpu = int(args.gpu)
     batch_size = int(args.batch_size)
     

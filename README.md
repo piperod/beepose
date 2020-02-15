@@ -28,14 +28,14 @@ To create your own data, make sure you have an annotations file that follows [CO
 
 ### Start training
 
-To train go to the train folder in src. 
+To train go to the train folder in beepose. 
 
 ````
-    cd src/train
+    cd beepose/train
 ```` 
 Now you just need to run the following script that would read the annotations file and automatically set the parameters according to the configuration in the annotations file. 
 
-In this script you will have to point to the path where the annotations are and the images are. 
+In this script you will have to point to the path where the annotations and the images are. 
 
 
 ````
@@ -70,11 +70,16 @@ np1=6,np2=10,numparts=5,mapIdx=[[0,1],[2,3],[4,5],[6,7],[8,9]],limbSeq=[[1,3],[3
 - For a connection `k` (`k=0..numpafs-1`), defined as (point1, point2):
    - `mapIdx[k]` is PAFs channel IDs for connection k (value in 0..np2-1), in the form of a pair `[channelId1, channelId1]`
    - `limbSeq[k]` is part IDs for connection k (value in 1..numparts), in the form of a pair `[partId1, partId2]`
+   
+Inference 
+---------
+
+You may not need to run the full pipeline and maybe just want to perform detection on video or static images. You can process one video using the script in 'beepose/inference/inference_video.py'. Also if you only have statics images you can use the script on 'beepose/inference/process_folder_image.py' which only takes the containing folder where the images are located. 
 
 Pipeline 
 --------
 
-Once the model is trained. You can start the pipeline processing. 
+Once the model is trained. You can start the pipeline processing. By default the pipeline performs all the following actions, if you only would like to perform detection at some video and tracking, you can call the script at the end of this sections with event_detection=False and the same for pollen detection. 
 
 The pipeline consists on the following steps: 
 
@@ -169,23 +174,24 @@ Performing all the previous pipeline can be done using the process_full_video.py
 
 
 ````
-usage: process_folder_full_video.py 
-[-h] [--videos_path VIDEOS_PATH]
-                                    [--GPU {0,1,2}] [--GPU_mem GPU_MEM]
+usage: process_folder_full_video.py [-h] [--videos_path VIDEOS_PATH]
+                                    [--GPU GPU] [--GPU_mem GPU_MEM]
                                     [--model_day MODEL_DAY]
                                     [--model_nigth MODEL_NIGTH]
                                     [--model_pollen MODEL_POLLEN]
                                     [--output_folder OUTPUT_FOLDER]
-                                    [--limb_conf LIMB_CONF]
-                                    [--paf_conf PAF_CONF] [--sufix SUFIX]
+                                    [--sufix SUFIX]
                                     [--tracking {hungarian,kalman,both}]
-                                    [--np1 NP1] [--np2 NP2]
+                                    --model_config MODEL_CONFIG [--part PART]
+                                    [--process_pollen] [--event_detection]
+                                    [--debug DEBUG]
 
 optional arguments:
   -h, --help            show this help message and exit
   --videos_path VIDEOS_PATH
                         input folder path where the videos are
-  --GPU {0,1,2}
+  --GPU GPU             GPU number for the device. If you want to use more
+                        than one, separate by commas like 0,1,2 etc
   --GPU_mem GPU_MEM     Memory available
   --model_day MODEL_DAY
                         path to day model
@@ -194,12 +200,17 @@ optional arguments:
   --model_pollen MODEL_POLLEN
                         path to night model
   --output_folder OUTPUT_FOLDER
-  --limb_conf LIMB_CONF
-  --paf_conf PAF_CONF
   --sufix SUFIX         Sufix to identify the detection
   --tracking {hungarian,kalman,both}
-  --np1 NP1             number of channels for pafs
-  --np2 NP2             number of channels for heatmaps
+  --model_config MODEL_CONFIG
+                        Model config json file
+  --part PART           Index id of Part to be tracked
+  --process_pollen      Whether to apply pollen detection separately. Default
+                        is True
+  --event_detection     Whether to apply event detection. Default is True
+  --debug DEBUG         If debug is True logging will include profiling and
+                        other details
+
 ````
 
 7. **Standard input for processing pollen and tag together**
