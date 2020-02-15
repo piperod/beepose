@@ -3,6 +3,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+.vscode/
+beepose/inference/inference_images/
+beepose/inference/test_scratch/
+beepose/inference/test_scratch_config/
+beepose/train/debugging_nomask_scaling/
+beepose/train/scratch_1/
+beepose_test.yml
+
+
+
 # C extensions
 *.so
 

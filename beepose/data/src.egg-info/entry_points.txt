@@ -1,5 +1,0 @@
-[console_scripts]
-get_inference_model = src.train.get_inference_model:main
-process_folder_full_video = src.inference.process_folder_full_video:main
-train_stages_aug = src.train.train_stages_aug:main
-
