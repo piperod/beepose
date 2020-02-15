@@ -19,8 +19,6 @@ colors= [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0],
 
 @numba.jit(nopython=True, parallel=True)
 def calculate_peaks(numparts,heatmap_avg):
-    
-    
     #Right now there is a score for every part since some parts are likely to need lower thresholds. 
     # TODO: Run grid search to find the ideal values. 
     score=[0.2,0.2,0.2,0.2,0.2,0.5,0.5,0.5,0.5]
@@ -35,8 +33,6 @@ def calculate_peaks(numparts,heatmap_avg):
     for part in range(numparts):
         map_ori = heatmap_avg[:, :, part]
         map = map_ori
-        #map = #gaussian_filter(map_ori, sigma=3)
-
         map_left = np.zeros(map.shape)
         map_left[1:, :] = map[:-1, :]
         map_right = np.zeros(map.shape)
@@ -45,18 +41,9 @@ def calculate_peaks(numparts,heatmap_avg):
         map_up[:, 1:] = map[:, :-1]
         map_down = np.zeros(map.shape)
         map_down[:, :-1] = map[:, 1:]
-
-        #peaks_binary = np.logical_and.reduce((map >= map_left, map >= map_right, map >= map_up, map >= map_down, map >0.1))
         peaks_binary = np.logical_and(np.logical_and(np.logical_and(map >= map_left, map >= map_right), np.logical_and(map >= map_up, map >= map_down)), map >score[part])
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
-       
-        #peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
-        #id = range(peak_counter, peak_counter + len(peaks))
-        #peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
-        #peaks_with_score_and_id = [peaks_with_score[i] + (i+peak_counter,) for i in list(range(len(peaks)))]
-        #peaks_with_score_and_id = [ pws + (i+peak_counter,) for i,pws in enumerate(peaks_with_score) ]
         peaks_with_score_and_id = [ x + (map_ori[x[1], x[0]], i+peak_counter,) for i,x in enumerate(peaks)] #if x[0]>0 and x[1]>0 ]
-        
         all_peaks.append(peaks_with_score_and_id)
         peak_counter += len(peaks)
     return all_peaks
