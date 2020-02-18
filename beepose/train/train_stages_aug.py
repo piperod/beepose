@@ -5,6 +5,7 @@ import pandas
 import re
 import math
 import argparse
+import keras
 from beepose.models.train_model import get_training_model_new
 from beepose.train.ds_iterator import DataIterator
 from beepose.train.ds_client_generator import DataGeneratorClient
@@ -19,7 +20,7 @@ from beepose.data.pose_augmenter import set_network_input_wh, set_network_scale,
 from beepose.utils.util import save_json
 from beepose.train.inference_model import save_inference_model
 from beepose.utils.util import get_skeleton_from_json, get_skeleton_mapIdx
-#from beepose.train.train_callbacks import TensorBoardImage
+from beepose.train.custom_callbacks import AttentionLogger
 import cv2
 import keras.backend as K
 import tensorflow as tf
@@ -73,7 +74,14 @@ def gen(df,batch_size,stages):
         #import pdb;pdb.set_trace()
         yield [img,vec_weights,  heat_weights], array[:stages*2]
         
-def prepare_generators(ann_path,imgs_path, stages=2, batch_size=10, network_scale=8,w=368,h=368,  mins=0.125,
+def gen_val(df,batch_size):
+    batch_data =df.get_data()
+    while True:
+        img,heat_weights,vec_weights  = tuple(next(df.get_data()))
+       
+  
+        yield [img,vec_weights,  heat_weights]
+def prepare_generators(ann_path,imgs_path, ann_val_path=None,val_imgs_path=None,stages=2, batch_size=10, network_scale=8,w=368,h=368,  mins=0.125,
     maxs=0.6,mina=-np.pi/4,maxa=np.pi/4,sigma=16,translation=True,rotation=True,scale=True):
     # prepare generators
     
@@ -92,7 +100,16 @@ def prepare_generators(ann_path,imgs_path, stages=2, batch_size=10, network_scal
                      translation=translation,rotation=rotation,
                      scale=scale,mins=mins,maxs=maxs,mina=mina,maxa=maxa,sigma=sigma)
     
-    return gen(batch_df,batch_size,stages),train_samples
+    if ann_val_path and val_imgs_path:
+        val_batch_df = get_dataflow_batch(ann_val_path,is_train=False,
+                        batch_size=10,img_path=val_imgs_path,
+                        output_shape=output_shape)
+        
+        
+    
+    
+    
+    return gen(batch_df,batch_size,stages),train_samples,gen_val(val_batch_df,batch_size)
 
 
 def prepare_logging(folder,stages,np1,np2,params):
@@ -124,7 +141,7 @@ def vgg_layers():
 
 
 
-def get_call_backs(lrate,step_decay,val_dir,WEIGHTS_BEST,WEIGHTS_100_EPOCH,WEIGHTS_COMPLETE,TRAINING_LOG,LOGS_DIR):
+def get_call_backs(lrate,step_decay,val_gen,WEIGHTS_BEST,WEIGHTS_100_EPOCH,WEIGHTS_COMPLETE,TRAINING_LOG,LOGS_DIR):
     lrate = LearningRateScheduler(step_decay)
     checkpoint = ModelCheckpoint(WEIGHTS_BEST, monitor='loss', verbose=0, save_best_only=False, save_weights_only=True, mode='min', period=1)
     checkpoint2 = ModelCheckpoint(WEIGHTS_100_EPOCH, monitor='loss', verbose=0, save_best_only=False, save_weights_only=True, mode='min', period=100)
@@ -132,7 +149,8 @@ def get_call_backs(lrate,step_decay,val_dir,WEIGHTS_BEST,WEIGHTS_100_EPOCH,WEIGH
     csv_logger = CSVLogger(TRAINING_LOG, append=True)
     tb = TensorBoard(log_dir=LOGS_DIR, histogram_freq=0, write_graph=True, write_images=False)
     #tb_image = TensorBoardImage(val_dir,LOGS_DIR)
-    callbacks_list = [lrate, checkpoint, csv_logger, tb,checkpoint2,checkpoint3]
+    tb_attention = AttentionLogger(val_gen,LOGS_DIR,freq=10)
+    callbacks_list = [lrate, checkpoint, csv_logger, tb,checkpoint2,checkpoint3,tb_attention]
     return callbacks_list
 
 def get_step_decay(base_lr, iterations_per_epoch, gamma, stepsize):
@@ -186,6 +204,7 @@ def main():
     parser.add_argument('--ann', type=str,default = '../../data/raw/bee/dataset_raw/train_bee_annotations2018.json' ,help =' Path to annotations')
     parser.add_argument('--imgs',type=str, default = '../../data/raw/bee/dataset_raw/train',help='Path to images folder')
     parser.add_argument('--val_imgs',type=str,default='../../data/raw/bee/dataset_raw/validation',help= 'path to val images folder')
+    parser.add_argument('--val_ann',type=str,default='../../data/raw/bee/dataset_raw/validation.json',help= 'path to val images folder')
     parser.add_argument('--batch_size', type=int, default =10, help= 'batch_size' )
     parser.add_argument('--max_iter', type=int,default=20000, help='Number of epochs to run ')
     
@@ -193,8 +212,9 @@ def main():
     args = parser.parse_args()
     folder = args.folder
     stages=int(args.stages)
-    val_imgs = str(args.val_imgs)
+    val_imgs_path = str(args.val_imgs)
     ann_file = str(args.ann)
+    val_ann_file = str(args.val_ann)
     
     numparts, skeleton = get_skeleton_from_json(ann_file)
     
@@ -231,11 +251,6 @@ def main():
     
     print(gpu)
     
-#         print(gpu)
-#         os.environ["CUDA_VISIBLE_DEVICES"]="%d"%gpu
-        
-    
-    
     
     config = tf.ConfigProto()
     if gpu != 'all':
@@ -247,7 +262,7 @@ def main():
     
     # Prepare generator
   
-    train_gen,train_samples = prepare_generators(ann_path=str(args.ann),imgs_path=str(args.imgs), stages=stages, batch_size=batch_size)
+    train_gen,train_samples,val_gen = prepare_generators(ann_val_path=val_ann_file,val_imgs_path=val_imgs_path,ann_path=str(args.ann),imgs_path=str(args.imgs), stages=stages, batch_size=batch_size)
     
     WEIGHTS_100_EPOCH,WEIGHTS_BEST,WEIGHTS_COMPLETE,TRAINING_LOG,LOGS_DIR =prepare_logging(folder,stages,np1,np2,params)
     
@@ -297,9 +312,10 @@ def main():
 
     # configure callbacks
     lrate = LearningRateScheduler(step_decay)
-    callbacks_list = get_call_backs(lrate,step_decay,val_imgs,
+    callbacks_list = get_call_backs(lrate,step_decay,val_gen,
                                  WEIGHTS_BEST,WEIGHTS_100_EPOCH,
                                     WEIGHTS_COMPLETE,TRAINING_LOG,LOGS_DIR)
+   
     # sgd optimizer with lr multipliers
     #multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0, nesterov=False, lr_mult=lr_mult)
     multisgd = Adam(lr=base_lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)

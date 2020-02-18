@@ -67,7 +67,7 @@ class CocoMetadata:
     def __init__(self, idx, img_url, img_meta, annotations, sigma=8.0,output_shape=(1440,2560),numparts=5,coco_vecs = list(zip(
         [1, 2, 3, 4],
         [2, 3, 4, 5]
-            )), translation=False,scale=False,rotation=True,mins=0.25,maxs=1.2,mina=-np.pi,maxa=np.pi, ilumination=0.0,image_type='RGB'):
+            )), translation=False,scale=False,rotation=True,mins=0.25,maxs=1.2,mina=-np.pi,maxa=np.pi, ilumination=0.0,image_type='RGB',is_train=True):
         # FOr BEES  coco_vecslist(zip([1, 1, 3, 2, 2],[2, 3, 2, 4, 5]
         # 1: Cabeza, 2: Thorax, 3: LL, 4:LR ,5:ER , 6:EL, 7: Cola
         self.__coco_parts = numparts #8
@@ -90,6 +90,7 @@ class CocoMetadata:
         self.height = int(img_meta['height'])
         self.width = int(img_meta['width'])
         self.image_type = image_type
+        self.is_train=is_train
         
         
         joint_list = []
@@ -411,7 +412,7 @@ class CocoPose(RNGDataFlow):
                                 numparts=self.numparts,coco_vecs=self.skeleton,
                                 translation=self.translation,scale=self.scale,
                                 rotation=self.rotation,mins=self.mins,maxs=self.maxs, mina=self.mina,maxa=self.maxa,
-                                ilumination=self.ilumination)
+                                ilumination=self.ilumination,image_type=self.image_type,is_train=self.is_train)
                 meta.mask_all = mask_all
                 meta.mask_miss = mask_miss
                 total_keypoints = sum([ann.get('num_keypoints', 0) for ann in anns])
@@ -528,7 +529,8 @@ def get_dataflow(path, is_train=True, img_path=None,sigma=8.0,output_shape=(1440
                         mins=mins,maxs=maxs,mina=mina,maxa=maxa, ilumination=ilumination,image_type=image_type
                         )       # read data from lmdb
     if is_train:
-        ds = MapData(ds, read_image_url)
+        #ds = MapData(ds, read_image_url)
+        ds = MultiThreadMapData(ds, nr_thread=8, map_func=read_image_url, buffer_size=10)
         
         ds = MapDataComponent(ds, get_augmented_image)
         #ds = MapDataComponent(ds, pose_rotation)
@@ -546,11 +548,12 @@ def get_dataflow(path, is_train=True, img_path=None,sigma=8.0,output_shape=(1440
         # ds = AugmentImageComponent(ds, augs)
         ds = PrefetchData(ds, 10, multiprocessing.cpu_count() * 1)
     else:
-        ds = MultiThreadMapData(ds, nr_thread=16, map_func=read_image_url, buffer_size=10)
-        ds = MapDataComponent(ds, pose_resize_shortestedge_fixed)
-        ds = MapDataComponent(ds, pose_crop_center)
+        #ds = MultiThreadMapData(ds, nr_thread=4, map_func=read_image_url, buffer_size=10)
+        ds = MapData(ds, read_image_url)
+        #ds = MapDataComponent(ds, pose_resize_shortestedge_fixed)
+        #ds = MapDataComponent(ds, pose_crop_center)
         ds = MapData(ds, pose_to_img)
-        ds = PrefetchData(ds, 100, multiprocessing.cpu_count() // 4)
+        ds = PrefetchData(ds, 10, multiprocessing.cpu_count() // 4)
 
     return ds
 

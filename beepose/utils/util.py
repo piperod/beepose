@@ -19,8 +19,9 @@ def merge_solutions_by_batch(results):
         final.update(r)
     return final 
 
+
 def read_json(filename):
-    with open(filename) as file:
+    with open(filename,encoding='utf-8') as file:
         detections= json.load(file)
     return detections
 

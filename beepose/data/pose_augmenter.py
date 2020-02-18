@@ -206,31 +206,55 @@ def pose_to_img(meta_l):
     try:
         target_size=(_network_w // _scale, _network_h // _scale)
         #print( _network_w, _network_h, _scale)
+        if meta_l[0].is_train:
+            if meta_l[0].image_type == 'RGB':
+                resized =meta_l[0].img#cv2.resize(meta_l[0].img,(_network_w , _network_h),interpolation=cv2.INTER_CUBIC)
+            else:
+                resized = meta_l[0].img[:,:,[2,1,0]]
+            # Masking in the shape of heatmaps and vectormaps to create weights
+       
+            mask_img = cv2.resize(meta_l[0].mask_miss_out,target_size,interpolation=cv2.INTER_NEAREST)
+
+            #mask_miss = meta_l[0].mask_miss_out#cv2.resize(meta_l[0].mask_miss_out,target_size)
+
+            # mask - the same for vec_weights, heat_weights
+       
+            vec_weights = np.repeat(mask_img[:,:,np.newaxis], meta_l[0].numparts*2, axis=2)
+            heat_weights=  np.repeat(mask_img[:,:,np.newaxis], meta_l[0].numparts, axis=2)
+            #print(meta_l[0].params)
+            return [
+            resized,heat_weights,vec_weights,
+            meta_l[0].get_heatmap(target_size=target_size),
+            meta_l[0].get_vectormap(target_size=target_size)]
+        else:
+            #print(meta_l[0].img.shape)
+            
+            if meta_l[0].image_type == 'RGB':
+                
+                w,h= meta_l[0].img.shape[0]//4, meta_l[0].img.shape[1]//4
+                resized =cv2.resize(meta_l[0].img,(h,w),interpolation=cv2.INTER_CUBIC)
+                #resized = resized[:_network_w,:_network_h]
+            else:
+                resized = meta_l[0].img[:,:,[2,1,0]]
+            target_size1=(w // _scale, h // _scale,meta_l[0].numparts*2)
+            target_size2=(w // _scale, h // _scale,meta_l[0].numparts)
+            return [
+            resized,np.ones(target_size2),np.ones(target_size1)]
+    except:
+        
         if meta_l[0].image_type == 'RGB':
-            resized =meta_l[0].img#cv2.resize(meta_l[0].img,(_network_w , _network_h),interpolation=cv2.INTER_CUBIC)
+            w,h= meta_l[0].img.shape[0], meta_l[0].img.shape[1]
+            resized =cv2.resize(meta_l[0].img,(h//4,w//4),interpolation=cv2.INTER_CUBIC)
+            #resized = resized[:_network_w,:_network_h]
         else:
             resized = meta_l[0].img[:,:,[2,1,0]]
-        # Masking in the shape of heatmaps and vectormaps to create weights
-                   
-        mask_img = cv2.resize(meta_l[0].mask_miss_out,target_size,interpolation=cv2.INTER_NEAREST)
-        
-        #mask_miss = meta_l[0].mask_miss_out#cv2.resize(meta_l[0].mask_miss_out,target_size)
-        
-        # mask - the same for vec_weights, heat_weights
-       
-        vec_weights = np.repeat(mask_img[:,:,np.newaxis], meta_l[0].numparts*2, axis=2)
-        heat_weights=  np.repeat(mask_img[:,:,np.newaxis], meta_l[0].numparts, axis=2)
-        #print(meta_l[0].params)
+        if meta_l[0].is_train:
+            debug = True
+        else:
+            debug = False
         return [
-        resized,heat_weights,vec_weights,
-        meta_l[0].get_heatmap(target_size=target_size),
-        meta_l[0].get_vectormap(target_size=target_size)
-    ]
-    except:
-    
-        return [
-        meta_l[0].img.astype(np.float16),
+        resized,
         meta_l[0].get_heatmap(target_size=(_network_w // _scale, _network_h // _scale)),
-        meta_l[0].get_vectormap(target_size=(_network_w // _scale, _network_h // _scale),debug=True)
+        meta_l[0].get_vectormap(target_size=(_network_w // _scale, _network_h // _scale),debug=debug)
     ]
 
