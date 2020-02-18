@@ -7,6 +7,34 @@ beepose
 
 Welcome to beepose the repo to perform multiple animal pose estimation and tracking. 
 
+### Docker
+
+#### Dependecies
+- Docker 19.03
+- [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
+ 
+ 
+To build the image you should run:
+
+`
+docker build -t <IMAGE_NAME> .
+`
+
+And for run the container you need to run
+
+`
+docker run --gpus all -it <IMAGE_NAME> /bin/bash
+`
+
+Maybe you want to add a volume (attach a folder to the container) to the docker container you can do it in the following way:
+ 
+`
+docker run --gpus all  -v <host absolute path>:<container absolute path> -it <IMAGE_NAME> /bin/bash
+`
+Example:
+`
+docker run --gpus all  -v /home/user/data:/home/beepose/input_data -it beepose_image /bin/bash
+`
 
 
 How to start?
