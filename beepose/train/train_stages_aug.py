@@ -224,7 +224,7 @@ def main():
     np1= np2 * 2#12 #number of channels for pafs
 #     numparts = np2 
     mapIdx = get_skeleton_mapIdx(numparts)
-    gpu = int(args.gpu)
+    gpu = args.gpu
     batch_size = int(args.batch_size)
     
     base_lr = 4e-5 
@@ -254,9 +254,9 @@ def main():
     
     config = tf.ConfigProto()
     if gpu != 'all':
-        config.gpu_options.visible_device_list= "%d"%gpu
+        config.gpu_options.visible_device_list= "%d"%int(gpu)
         os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"]="%d"%gpu
+        os.environ["CUDA_VISIBLE_DEVICES"]="%d"%int(gpu)
     config.gpu_options.per_process_gpu_memory_fraction = fraction
     session = tf.Session(config=config)
     
