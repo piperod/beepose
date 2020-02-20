@@ -155,5 +155,6 @@ dependencies:
     - tabulate==0.8.6
     - tensorflow-gpu==1.9.0
     - tensorpack==0.9.8
+    - tfmpl==1.0.2 
 prefix: /home/jchan/anaconda3/envs/beepose
 
