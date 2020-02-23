@@ -18,7 +18,7 @@ import time
 logger = logging.getLogger(__name__)
 
     
-def process_video_fragment(file,model_file_day,model_file_nigth,gpu,gpu_fraction,start_frame,end_frame,limbSeq,mapIdx,np1,np2,output,numparts=5,checkpoint=9000,FPS=20):
+def process_video_fragment(file,model_file_day,gpu,gpu_fraction,start_frame,end_frame,limbSeq,mapIdx,np1,np2,output,numparts=5,checkpoint=9000,FPS=20):
     """ 
     
     Wrapper function to process video fragment. 
@@ -222,8 +222,8 @@ if __name__ == '__main__':
     
     limbSeq = config["skeleton"]
     mapIdx = config["mapIdx"]
-    sufix = args.sufix
-    tracking = args.tracking
+    # sufix = args.sufix
+    # tracking = args.tracking
     np1 = config["np1"]
     np2 = config["np2"]
     numparts= config["numparts"]
