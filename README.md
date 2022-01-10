@@ -306,5 +306,8 @@ Project Organization
 
 --------
 
+8 **Plot bee* 
+An addiitional and recommended repo to use is Plotbee, where you will find several tools. 
+https://github.com/jachansantiago/plotbee
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
 
